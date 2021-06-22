@@ -1,0 +1,120 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-conf
+  labels:
+    app: opentelemetry
+    component: otel-collector-conf
+data:
+  otel-collector-config: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+          http:
+    processors:
+      batch:
+        timeout: 10s
+      k8s_tagger:
+    extensions:
+      health_check: {}
+      zpages: {}
+    exporters:
+      datadog:
+        env: dev
+        service: demo
+        version: 1.0
+        tags:
+          - demo:1.0
+        api:
+          key: "371fac1fe948000224233cd326aa6350"
+    service:
+      extensions: [health_check, zpages]
+      pipelines:
+        metrics:
+          receivers: [otlp]
+          processors: [batch, k8s_tagger]
+          exporters: [datadog]
+        traces:
+          receivers: [otlp]
+          processors: [batch, k8s_tagger]
+          exporters: [datadog]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  labels:
+    app: opentelemetry
+    component: otel-collector
+spec:
+  ports:
+  - name: otlp # Default endpoint for OpenTelemetry receiver.
+    port: 55680
+    protocol: TCP
+    targetPort: 55680
+  - name: metrics # Default endpoint for querying metrics.
+    port: 8888
+  selector:
+   component: otel-collector
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  labels:
+    app: opentelemetry
+    component: otel-collector
+spec:
+  selector:
+    matchLabels:
+      app: opentelemetry
+      component: otel-collector
+  minReadySeconds: 65
+  progressDeadlineSeconds: 120
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: opentelemetry
+        component: otel-collector
+    spec:
+      serviceAccountName: opentelemetry-collector
+      containers:
+      - command:
+          - "/otelcontribcol"
+          - "--config=/conf/otel-collector-config.yaml"
+          - "--log-level=debug"
+        image: otel/opentelemetry-collector-contrib:latest
+        name: otel-collector
+        resources:
+          limits:
+            cpu: 1
+            memory: 2Gi
+          requests:
+            cpu: 200m
+            memory: 400Mi
+        ports:
+        - containerPort: 55679 # Default endpoint for ZPages.
+        - containerPort: 55680 # Default endpoint for OpenTelemetry receiver.
+        - containerPort: 8888  # Default endpoint for querying metrics.
+        volumeMounts:
+        - name: otel-collector-config-vol
+          mountPath: /conf
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 13133 # Health Check extension default port.
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 13133 # Health Check extension default port.
+      volumes:
+        - configMap:
+            name: otel-collector-conf
+            items:
+              - key: otel-collector-config
+                path: otel-collector-config.yaml
+          name: otel-collector-config-vol
+

@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: demo
+  name: demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: demo
+    spec:
+      serviceAccountName: opentelemetry-collector
+      containers:
+      - name: demo
+        image: kuriouscoder/demo-app
+        env:
+        - name: JAVA_TOOL_OPTIONS
+          value: -javaagent:/opt/opentelemetry-javaagent-all.jar # -Dotel.traces.exporter=datadog -Dotel.metrics.exporter=datadog
+        - name: HOST_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        # This is picked up by the opentelemetry sdks
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "http://10.108.228.137:55680"
+        resources: {}
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: demo
+  name: demo
+spec:
+  ports:
+  - name: 8080-8080
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: demo
+  type: ClusterIP
+status:
+  loadBalancer: {}
