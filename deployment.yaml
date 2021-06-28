@@ -6,7 +6,7 @@ metadata:
     app: demo
   name: demo
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: demo
@@ -23,14 +23,14 @@ spec:
         image: kuriouscoder/demo-app
         env:
         - name: JAVA_TOOL_OPTIONS
-          value: -javaagent:/opt/opentelemetry-javaagent-all.jar # -Dotel.traces.exporter=datadog -Dotel.metrics.exporter=datadog
+          value: "-javaagent:/opt/opentelemetry-javaagent-all.jar -Dotel.resource.attributes=service.name=demo '-Dlogging.pattern.console=%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg trace_id=%X{trace_id}  span_id=%X{span_id}  trace_flags=%X{trace_flags} %n'"
         - name: HOST_IP
           valueFrom:
             fieldRef:
               fieldPath: status.hostIP
         # This is picked up by the opentelemetry sdks
         - name: OTEL_EXPORTER_OTLP_ENDPOINT
-          value: "http://10.108.228.137:55680"
+          value: "http://otel-collector.default:55680"
         resources: {}
 status: {}
 ---
@@ -52,3 +52,4 @@ spec:
   type: ClusterIP
 status:
   loadBalancer: {}
+

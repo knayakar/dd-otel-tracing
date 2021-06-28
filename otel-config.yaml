@@ -29,7 +29,7 @@ data:
         tags:
           - multi-microservices:1.0
         api:
-          key: "4eefeb2fe45e417b1598d788e5c9dd82"
+          key: "<YOUR_DATADOG_API>"
     service:
       extensions: [health_check, zpages]
       pipelines:
