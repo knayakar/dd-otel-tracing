@@ -49,18 +49,18 @@ spec:
     spec:
       serviceAccountName: opentelemetry-collector
       containers:
-      - image: kuriouscoder/microservice-kubernetes-demo-catalog:latest
+      - image: kuriouscoder/microservice-kubernetes-demo-catalog:5.0
         name: catalog
         env:
         - name: JAVA_TOOL_OPTIONS
-          value: -javaagent:/opt/opentelemetry-javaagent-all.jar
+          value: "-Dotel.resource.attributes=service.name=catalog '-Dlogging.pattern.console=%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg trace_id=%X{trace_id}  span_id=%X{span_id}  trace_flags=%X{trace_flags} %n'"
         - name: HOST_IP
           valueFrom:
             fieldRef:
               fieldPath: status.hostIP
         # This is picked up by the opentelemetry sdks
-        - name: OTEL_EXPORTER_OTLP_ENDPOINT
-          value: "http://172.17.0.7:55680"
+        - name:  OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "http://otel-collector.default:55680"
         ports:
         - containerPort: 8080
         resources: {}
@@ -89,18 +89,18 @@ spec:
     spec:
       serviceAccountName: opentelemetry-collector
       containers:
-      - image: kuriouscoder/microservice-kubernetes-demo-customer:latest
+      - image: kuriouscoder/microservice-kubernetes-demo-customer:5.0
         name: customer
         env:
         - name: JAVA_TOOL_OPTIONS
-          value: -javaagent:/opt/opentelemetry-javaagent-all.jar
+          value: -Dotel.resource.attributes=service.name=customer '-Dlogging.pattern.console=%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg trace_id=%X{trace_id}  span_id=%X{span_id}  trace_flags=%X{trace_flags} %n'
         - name: HOST_IP
           valueFrom:
             fieldRef:
               fieldPath: status.hostIP
         # This is picked up by the opentelemetry sdks
         - name: OTEL_EXPORTER_OTLP_ENDPOINT
-          value: "http://172.17.0.7:55680"
+          value: "http://otel-collector.default:55680"
         ports:
         - containerPort: 8080
         resources: {}
@@ -129,18 +129,18 @@ spec:
     spec:
       serviceAccountName: opentelemetry-collector
       containers:
-      - image: kuriouscoder/microservice-kubernetes-demo-order:latest
+      - image: kuriouscoder/microservice-kubernetes-demo-order:5.0
         name: order
         env:
         - name: JAVA_TOOL_OPTIONS
-          value: -javaagent:/opt/opentelemetry-javaagent-all.jar
+          value: -Dotel.resource.attributes=service.name=order '-Dlogging.pattern.console=%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg trace_id=%X{trace_id}  span_id=%X{span_id}  trace_flags=%X{trace_flags} %n'
         - name: HOST_IP
           valueFrom:
             fieldRef:
               fieldPath: status.hostIP
         # This is picked up by the opentelemetry sdks
         - name: OTEL_EXPORTER_OTLP_ENDPOINT
-          value: "http://172.17.0.7:55680"
+          value: "http://otel-collector.default:55680"
         ports:
         - containerPort: 8080
         resources: {}
@@ -225,3 +225,4 @@ spec:
   type: LoadBalancer
 status:
   loadBalancer: {}
+

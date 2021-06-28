@@ -1,4 +1,5 @@
 ---
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -21,25 +22,25 @@ data:
       health_check: {}
       zpages: {}
     exporters:
-      datadog:
-        env: dev
-        service: demo
+      datadog/api:
+        env: test
+        service: multi-microservices
         version: 1.0
         tags:
-          - demo:1.0
+          - multi-microservices:1.0
         api:
-          key: "371fac1fe948000224233cd326aa6350"
+          key: "4eefeb2fe45e417b1598d788e5c9dd82"
     service:
       extensions: [health_check, zpages]
       pipelines:
-        metrics:
-          receivers: [otlp]
-          processors: [batch, k8s_tagger]
-          exporters: [datadog]
         traces:
           receivers: [otlp]
-          processors: [batch, k8s_tagger]
-          exporters: [datadog]
+          processors: [k8s_tagger, batch]
+          exporters: [datadog/api]
+        #logs:
+        #  receivers: [otlp]
+        #  processors: [k8s_tagger, batch]
+        #  exporters: [datadog/api]
 ---
 apiVersion: v1
 kind: Service
@@ -72,7 +73,7 @@ spec:
       app: opentelemetry
       component: otel-collector
   minReadySeconds: 65
-  progressDeadlineSeconds: 120
+  progressDeadlineSeconds: 240
   replicas: 1
   template:
     metadata:
@@ -86,7 +87,7 @@ spec:
           - "/otelcontribcol"
           - "--config=/conf/otel-collector-config.yaml"
           - "--log-level=debug"
-        image: otel/opentelemetry-collector-contrib:latest
+        image: otel/opentelemetry-collector-contrib:0.27.0
         name: otel-collector
         resources:
           limits:
@@ -117,4 +118,3 @@ spec:
               - key: otel-collector-config
                 path: otel-collector-config.yaml
           name: otel-collector-config-vol
-
