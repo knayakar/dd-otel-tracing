@@ -17,6 +17,6 @@ Deploy the application and otel-collector.
 3. Deploy your application:
    kubectl apply -f microservices.yaml/deployment.yaml
 
-Uninstall and deleting deployment.
+Uninstall and/or delete deployment.
 1. kubectl delete -f *.yaml
 2. helm uninstall <RELEASE_NAME>
